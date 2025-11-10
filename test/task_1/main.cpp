@@ -44,33 +44,26 @@ struct Vertex {
     glm::vec2 texCoords; 
 };
 
-std::vector<Vertex> generateCircle(
+std::vector<Vertex> generateCircleFan(
     const glm::vec3& center,
     float radius,
     int segments = 36
 ) {
     std::vector<Vertex> vertices;
+
+    vertices.push_back({ center, glm::vec2(0.5f, 0.5f) });
+
     float angleStep = glm::two_pi<float>() / segments;
-
-    for (int i = 0; i < segments; ++i) {
+    for (int i = 0; i <= segments; ++i) { 
         float theta = i * angleStep;
-
-        glm::vec3 pos = center + glm::vec3{
-            glm::cos(theta) * radius,
-            glm::sin(theta) * radius,
-            0.0f
-        };
-
-        glm::vec2 texCoords = glm::vec2{
-            (glm::cos(theta) * 0.5f + 0.5f),
-            (glm::sin(theta) * 0.5f + 0.5f)
-        };
-
+        glm::vec3 pos = center + glm::vec3(glm::cos(theta) * radius, glm::sin(theta) * radius, 0.0f);
+        glm::vec2 texCoords = glm::vec2(glm::cos(theta) * 0.5f + 0.5f, glm::sin(theta) * 0.5f + 0.5f);
         vertices.push_back({ pos, texCoords });
     }
 
     return vertices;
 }
+
 
 
 int main()
@@ -144,13 +137,12 @@ int main()
     */
 
 
-    std::vector<Vertex> circleVertices = generateCircle(
-        glm::vec3(0.0f, 0.0f, 0.0f), // „—ﬂ“ «·œ«∆—…
-        1.0f,                        // ‰’› «·ﬁÿ—
-        100                            // ⁄œœ segments
+    std::vector<Vertex> circleVertices = generateCircleFan(
+        glm::vec3(0.0f, 0.0f, 0.0f), 
+        1.0f,                        
+        100                            
     );
 
-    // ≈‰‘«¡ VAO Ê VBO
     unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -222,8 +214,7 @@ int main()
 
 
         glBindVertexArray(VAO);
-        // —”„ «·œ«∆—… »«” Œœ«„ GL_LINE_LOOP ·≈ŸÂ«— «·„ÕÌÿ
-        glDrawArrays(GL_LINE_LOOP, 0, circleVertices.size());
+        glDrawArrays(GL_TRIANGLE_FAN, 0, circleVertices.size());
         glBindVertexArray(0);
 
 
