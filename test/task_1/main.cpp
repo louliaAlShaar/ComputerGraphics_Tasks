@@ -39,6 +39,39 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     camera.ProcessMouseScroll(yoffset);
 }
 
+struct Vertex {
+    glm::vec3 pos;
+    glm::vec2 texCoords; 
+};
+
+std::vector<Vertex> generateCircle(
+    const glm::vec3& center,
+    float radius,
+    int segments = 36
+) {
+    std::vector<Vertex> vertices;
+    float angleStep = glm::two_pi<float>() / segments;
+
+    for (int i = 0; i < segments; ++i) {
+        float theta = i * angleStep;
+
+        glm::vec3 pos = center + glm::vec3{
+            glm::cos(theta) * radius,
+            glm::sin(theta) * radius,
+            0.0f
+        };
+
+        glm::vec2 texCoords = glm::vec2{
+            (glm::cos(theta) * 0.5f + 0.5f),
+            (glm::sin(theta) * 0.5f + 0.5f)
+        };
+
+        vertices.push_back({ pos, texCoords });
+    }
+
+    return vertices;
+}
+
 
 int main()
 {
@@ -66,7 +99,7 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     Shader shader("Shaders/vertex.glsl", "Shaders/fragment.glsl");
-
+    
     int width, height, nrChannels;
     unsigned char* data = stbi_load("assets/wall.jpg", &width, &height, &nrChannels, 0);
     if (!data)
@@ -84,22 +117,7 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     stbi_image_free(data);
 
-
-
     /*
-    * test
-    float vertices[] = {
-        // positions         // texture coords
-         0.0f,  0.0f, 0.0f,   1.0f, 1.0f,   // v0 - center („—ﬂ“ «·„—ÊÕ…)
-         0.5f,  0.0f, 0.0f,   2.0f, 1.0f,   // v1 - Ì„Ì‰
-         0.35f, 0.35f, 0.0f,  1.8f, 1.8f,   // v2 - ›Êﬁ Ì„Ì‰
-         0.0f,  0.5f, 0.0f,   1.0f, 2.0f,   // v3 - ›Êﬁ
-        -0.35f, 0.35f, 0.0f,  0.2f, 1.8f,   // v4 - ›Êﬁ Ì”«—
-        -0.5f,  0.0f, 0.0f,   0.0f, 1.0f,   // v5 - Ì”«—
-        -0.35f, -0.35f, 0.0f, 0.2f, 0.2f,   // v6 -  Õ  Ì”«—
-         0.35f, -0.35f, 0.0f, 1.8f, 0.2f,   // v7 -  Õ  Ì„Ì‰
-         0.5f,  0.0f, 0.0f,   2.0f, 1.0f    // v8 - ‰—Ã⁄ ··‰ﬁÿ… «·√Ê·Ï ·‰€·ﬁ «·„—ÊÕ…
-    };*/
 
     float vertices[] = {
         // positions        // texture coords
@@ -122,6 +140,34 @@ int main()
 
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    */
+
+
+    std::vector<Vertex> circleVertices = generateCircle(
+        glm::vec3(0.0f, 0.0f, 0.0f), // „—ﬂ“ «·œ«∆—…
+        1.0f,                        // ‰’› «·ﬁÿ—
+        100                            // ⁄œœ segments
+    );
+
+    // ≈‰‘«¡ VAO Ê VBO
+    unsigned int VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, circleVertices.size() * sizeof(Vertex), circleVertices.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+    glEnableVertexAttribArray(1);
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
 
 
@@ -156,8 +202,9 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        shader.use();
 
+        shader.use();
+  
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), 800.0f / 600.0f, 0.1f, 100.0f);
 
@@ -168,18 +215,26 @@ int main()
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, -3.0f));
         model = glm::rotate(model, 0.0f, glm::vec3(0.0f, 0.0f, 1.0f)); //(float)glfwGetTime()
-        model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 
         unsigned int modelLoc = glGetUniformLocation(shader.ID, "model");
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
+
+        glBindVertexArray(VAO);
+        // —”„ «·œ«∆—… »«” Œœ«„ GL_LINE_LOOP ·≈ŸÂ«— «·„ÕÌÿ
+        glDrawArrays(GL_LINE_LOOP, 0, circleVertices.size());
+        glBindVertexArray(0);
+
+
+        
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         shader.setInt("texture1", 0);
-
+        
         glBindVertexArray(VAO);
         //glPointSize(10.0f);
-        glDrawArrays(GL_LINE_LOOP, 0, 3); //GL_TRIANGLES  GL_LINES  GL_POINTS  GL_LINE_STRIP  GL_LINE_LOOP  GL_TRIANGLE_STRIP  GL_TRIANGLE_FAN
+        //glDrawArrays(GL_LINE_LOOP, 0, 3); //GL_TRIANGLES  GL_LINES  GL_POINTS  GL_LINE_STRIP  GL_LINE_LOOP  GL_TRIANGLE_STRIP  GL_TRIANGLE_FAN
         //glDrawArrays(GL_TRIANGLE_FAN, 0, 9);
 
         glfwSwapBuffers(window);
