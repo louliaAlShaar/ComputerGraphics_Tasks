@@ -1,0 +1,25 @@
+# Visual Studio
+.vs/
+*.vcxproj.user
+*.suo
+*.user
+*.ipch
+*.opensdf
+*.sdf
+*.cache
+*.log
+
+# Visual Studio Code / JetBrains
+.vscode/
+.idea/
+
+# Build / Output folders
+out/
+build/
+bin/
+obj/
+
+
+
+
+

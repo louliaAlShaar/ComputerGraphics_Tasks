@@ -7,13 +7,14 @@ set(CMAKE_CXX_STANDARD 23)
 
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
 
+
 # Add include directories
 
 include_directories(include)
 
 # Add executable
 
-add_executable(main ${SOURCE_FILES} )
+add_executable(main ${SOURCE_FILES})
 
 # Add GLFW
 
@@ -42,6 +43,10 @@ glfw
 glad
 lodepng
 )
+
+# إضافة مهمة جديدة كمشروع فرعي
+add_subdirectory(task_1)
+
 
 # Copy assets and Shaders folder instead of symlink (Windows-friendly)
 
