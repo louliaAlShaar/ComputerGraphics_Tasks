@@ -15,7 +15,7 @@ enum Camera_Movement {
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
 const float SPEED = 2.5f;
-const float SENSITIVITY = 0.1f;
+const float SENSITIVITY = 0.3f;
 const float ZOOM = 45.0f;
 
 
@@ -106,6 +106,17 @@ public:
             Zoom = 45.0f;
     }
 
+    // Orbit style
+    glm::mat4 GetOrbitViewMatrix(const glm::vec3& target, float distance, float yawOrbit, float pitchOrbit)
+    {
+        glm::vec3 camPos;
+        camPos.x = distance * cos(glm::radians(pitchOrbit)) * cos(glm::radians(yawOrbit));
+        camPos.y = distance * cos(glm::radians(pitchOrbit)) * sin(glm::radians(yawOrbit));
+        camPos.z = distance * sin(glm::radians(pitchOrbit));
+
+        return glm::lookAt(camPos, target, glm::vec3(0.0f, 0.0f, 1.0f));
+    }
+
 private:
 
     void updateCameraVectors()
@@ -120,5 +131,9 @@ private:
         Right = glm::normalize(glm::cross(Front, WorldUp));  
         Up = glm::normalize(glm::cross(Right, Front));
     }
+
+
+
+
 };
 #endif

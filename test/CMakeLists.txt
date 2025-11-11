@@ -44,7 +44,6 @@ glad
 lodepng
 )
 
-# إضافة مهمة جديدة كمشروع فرعي
 add_subdirectory(task_1)
 
 
