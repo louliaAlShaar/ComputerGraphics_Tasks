@@ -101,16 +101,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     }
 }
 
-// ----------------- Camera -----------------
-glm::mat4 getOrbitViewMatrix()
-{
-    glm::vec3 camPos;
-    camPos.x = distanceToTarget * cos(glm::radians(pitchOrbit)) * cos(glm::radians(yawOrbit));
-    camPos.y = distanceToTarget * cos(glm::radians(pitchOrbit)) * sin(glm::radians(yawOrbit));
-    camPos.z = distanceToTarget * sin(glm::radians(pitchOrbit));
-
-    return glm::lookAt(camPos, orbitTarget, glm::vec3(0.0f, 0.0f, 1.0f));
-}
 
 // ----------------- Vertex Structs -----------------
 struct Vertex {
@@ -207,6 +197,20 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+
+    vector<Vertex> circleVertices2 = generateCircleFan(glm::vec3(0.0f, 0.0f, 2.0f), 1.0f, 100);
+    unsigned int VAO3, VBO3;
+    glGenVertexArrays(1, &VAO3);
+    glGenBuffers(1, &VBO3);
+    glBindVertexArray(VAO3);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO3);
+    glBufferData(GL_ARRAY_BUFFER, circleVertices2.size() * sizeof(Vertex), circleVertices2.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+    glEnableVertexAttribArray(1);
+    
+
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
 
@@ -248,7 +252,7 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -3.0f));
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f));
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
         glBindVertexArray(VAO);
@@ -263,6 +267,11 @@ int main()
         glDrawArrays(GL_TRIANGLE_STRIP, 0, sideVertices.size());
         glBindVertexArray(0);
 
+
+        glBindVertexArray(VAO3);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, circleVertices2.size());
+        glBindVertexArray(0);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -272,7 +281,9 @@ int main()
     glDeleteBuffers(1, &VBO);
     glDeleteVertexArrays(1, &VAO2);
     glDeleteBuffers(1, &VBO2);
+    glDeleteVertexArrays(1, &VAO3);
+    glDeleteBuffers(1, &VBO3);
 
     glfwTerminate();
-    return 0; // ·„ √⁄œ· Â‰«
+    return 0;
 }
