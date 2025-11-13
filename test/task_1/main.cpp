@@ -8,6 +8,7 @@
 #include "Shader.cpp"
 #include "../lib/stb_image.h"
 #include "Camera.cpp"
+#include <Mesh.cpp>
 using namespace std;
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -101,58 +102,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     }
 }
 
-
-// ----------------- Vertex Structs -----------------
-struct Vertex {
-    glm::vec3 pos;
-    glm::vec2 texCoords;
-};
-
-// ---------- Geometry Generators ----------
-vector<Vertex> generateCircleFan(const glm::vec3& center, float radius, int segments = 36) {
-    vector<Vertex> vertices;
-    vertices.push_back({ center, glm::vec2(0.5f, 0.5f) });
-    float angleStep = glm::two_pi<float>() / segments;
-    for (int i = 0; i <= segments; ++i) {
-        float theta = i * angleStep;
-        glm::vec3 pos = center + glm::vec3(glm::cos(theta) * radius, glm::sin(theta) * radius, 0.0f);
-        glm::vec2 texCoords = glm::vec2(glm::cos(theta) * 0.5f + 0.5f, glm::sin(theta) * 0.5f + 0.5f);
-        vertices.push_back({ pos, texCoords });
-    }
-    return vertices;
-}
-
-vector<Vertex> generateCylinderSide(const glm::vec3& center, float radius, float height, int segments = 36) {
-    vector<Vertex> vertices;
-    float angleStep = glm::two_pi<float>() / segments;
-    for (int i = 0; i <= segments; ++i) {
-        float theta = i * angleStep;
-        glm::vec3 bottomPos = center + glm::vec3(glm::cos(theta) * radius, glm::sin(theta) * radius, 0.0f);
-        glm::vec3 topPos = bottomPos + glm::vec3(0.0f, 0.0f, height);
-        glm::vec2 bottomUV = glm::vec2(static_cast<float>(i) / segments, 0.0f);
-        glm::vec2 topUV = glm::vec2(static_cast<float>(i) / segments, 1.0f);
-        vertices.push_back({ bottomPos, bottomUV });
-        vertices.push_back({ topPos, topUV });
-    }
-    return vertices;
-}
-
-
-vector<Vertex> generateCylinderSide2(const glm::vec3& center, float radius, float height, int segments = 36) {
-    vector<Vertex> vertices;
-    float angleStep = glm::two_pi<float>() / segments;
-    for (int i = 0; i <= segments; i+=2) {
-        float theta = i * angleStep;
-        glm::vec3 bottomPos = center + glm::vec3(glm::cos(theta) * radius, glm::sin(theta) * radius, 0.0f);
-        glm::vec3 topPos = center + glm::vec3(0.0f, 0.0f, height);
-        glm::vec2 bottomUV = glm::vec2(static_cast<float>(i) / segments, 0.0f);
-        glm::vec2 topUV = glm::vec2(static_cast<float>(i) / segments, 1.0f);
-        vertices.push_back({ bottomPos, bottomUV });
-        vertices.push_back({ topPos, topUV });
-    }
-    return vertices;
-}
-
 // ----------------- Main -----------------
 int main()
 {
@@ -187,75 +136,22 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     stbi_image_free(data);
 
-    vector<Vertex> circleVertices = generateCircleFan(glm::vec3(0.0f, 1.5f, 0.0f), 1.0f, 100);
-    unsigned int VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, circleVertices.size() * sizeof(Vertex), circleVertices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
-    glEnableVertexAttribArray(1);
+    // Circle √⁄·Ï
+    Mesh topCircle(ShapeGenerator::generateCircleFan(glm::vec3(0.0f, 1.5f, 0.0f), 1.0f, 100));
 
-    vector<Vertex> sideVertices = generateCylinderSide(glm::vec3(0.0f, 1.5f, 0.0f), 1.0f, 2.0f, 36);
-    unsigned int VAO2, VBO2;
-    glGenVertexArrays(1, &VAO2);
-    glGenBuffers(1, &VBO2);
-    glBindVertexArray(VAO2);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO2);
-    glBufferData(GL_ARRAY_BUFFER, sideVertices.size() * sizeof(Vertex), sideVertices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    // Cylinder ›Êﬁ
+    Mesh topCylinder(ShapeGenerator::generateCylinderSide(glm::vec3(0.0f, 1.5f, 0.0f), 1.0f, 2.0f, 36, false));
 
+    // Circle √⁄·Ï „‰ Cylinder
+    Mesh topCircle2(ShapeGenerator::generateCircleFan(glm::vec3(0.0f, 1.5f, 2.0f), 1.0f, 100));
 
-    vector<Vertex> circleVertices2 = generateCircleFan(glm::vec3(0.0f, 1.5f, 2.0f), 1.0f, 100);
-    unsigned int VAO3, VBO3;
-    glGenVertexArrays(1, &VAO3);
-    glGenBuffers(1, &VBO3);
-    glBindVertexArray(VAO3);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO3);
-    glBufferData(GL_ARRAY_BUFFER, circleVertices2.size() * sizeof(Vertex), circleVertices2.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
-    glEnableVertexAttribArray(1);
+    // Circle √”›·
+    Mesh bottomCircle(ShapeGenerator::generateCircleFan(glm::vec3(0.0f, -1.0f, 0.0f), 1.0f, 100));
 
+    // Cylinder √”›·
+    Mesh bottomCylinder(ShapeGenerator::generateCylinderSide(glm::vec3(0.0f, -1.0f, 0.0f), 1.0f, 2.0f, 36, true));
 
-
-    vector<Vertex> circleVertices3 = generateCircleFan(glm::vec3(0.0f, -1.0f, 0.0f), 1.0f, 100);
-    unsigned int VAO4, VBO4;
-    glGenVertexArrays(1, &VAO4);
-    glGenBuffers(1, &VBO4);
-    glBindVertexArray(VAO4);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO4);
-    glBufferData(GL_ARRAY_BUFFER, circleVertices3.size() * sizeof(Vertex), circleVertices3.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
-    glEnableVertexAttribArray(1);
     
-
-
-    vector<Vertex> sideVertices2 = generateCylinderSide2(glm::vec3(0.0f, -1.0f, 0.0f), 1.0f, 2.0f, 36);
-    unsigned int VAO5, VBO5;
-    glGenVertexArrays(1, &VAO5);
-    glGenBuffers(1, &VBO5);
-    glBindVertexArray(VAO5);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO5);
-    glBufferData(GL_ARRAY_BUFFER, sideVertices2.size() * sizeof(Vertex), sideVertices2.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
 
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
@@ -298,44 +194,26 @@ int main()
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f));
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, circleVertices.size());
-        glBindVertexArray(0);
+        // —‰œ— ﬂ· Mesh
+        topCircle.Draw(GL_TRIANGLE_FAN);       // Circle ›Êﬁ
+        topCylinder.Draw(GL_TRIANGLE_STRIP);     // Cylinder ›Êﬁ
+        topCircle2.Draw(GL_TRIANGLE_FAN);      // Circle √⁄·Ï „‰ Cylinder
+        bottomCircle.Draw(GL_TRIANGLE_FAN);    // Circle √”›·
+        bottomCylinder.Draw(GL_TRIANGLE_STRIP);  // Cylinder √”›·
+
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         shader.setInt("texture1", 0);
 
-        glBindVertexArray(VAO2);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, sideVertices.size());
-        glBindVertexArray(0);
+        
 
 
-        glBindVertexArray(VAO3);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, circleVertices2.size());
-        glBindVertexArray(0);
-
-
-        glBindVertexArray(VAO4);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, circleVertices3.size());
-        glBindVertexArray(0);
-
-
-        glBindVertexArray(VAO5);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, sideVertices2.size());
-        glBindVertexArray(0);
-
+        
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    // Cleanup
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteVertexArrays(1, &VAO2);
-    glDeleteBuffers(1, &VBO2);
-    glDeleteVertexArrays(1, &VAO3);
-    glDeleteBuffers(1, &VBO3);
 
     glfwTerminate();
     return 0;
