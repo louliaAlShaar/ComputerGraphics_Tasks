@@ -94,7 +94,7 @@ public:
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
     }
 
-    // ================== ≈÷«›«  ··‹ Shader Class ==================
+    // ================== Extra Functions Shader Class ==================
 
     // Vec3
     void setVec3(const std::string& name, float x, float y, float z) const {

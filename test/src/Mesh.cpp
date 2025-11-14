@@ -128,6 +128,7 @@ public:
          );
      }
 
+     // (Cone)
      static ConeMeshes generateCone(const glm::vec3& center, float radius, float height) {
          return ConeMeshes(
              Mesh(generateCircleFan(center, radius, 100)),
@@ -150,7 +151,7 @@ public:
      }
 
 
-
+     // (Prism)
      static Mesh generatePrism(glm::vec3 center, float radius, float height, int sides)
      {
          vector<Vertex> vertices;
@@ -161,7 +162,6 @@ public:
          glm::vec3 topCenter = center + glm::vec3(0, 0, halfH);
          glm::vec3 bottomCenter = center + glm::vec3(0, 0, -halfH);
 
-         // ======= 1) Generate Top Face =======
          for (int i = 0; i < sides; i++)
          {
              float theta1 = i * angleStep;
@@ -175,7 +175,6 @@ public:
              vertices.push_back({ p2, {glm::cos(theta2) * 0.5f + 0.5f, glm::sin(theta2) * 0.5f + 0.5f} });
          }
 
-         // ======= 2) Generate Bottom Face =======
          for (int i = 0; i < sides; i++)
          {
              float theta1 = i * angleStep;
@@ -189,7 +188,6 @@ public:
              vertices.push_back({ p1, {glm::cos(theta1) * 0.5f + 0.5f, glm::sin(theta1) * 0.5f + 0.5f} });
          }
 
-         // ======= 3) Generate Side Faces =======
          for (int i = 0; i < sides; i++)
          {
              float theta1 = i * angleStep;
@@ -201,7 +199,6 @@ public:
              glm::vec3 t1 = topCenter + glm::vec3(glm::cos(theta1) * radius, glm::sin(theta1) * radius, 0);
              glm::vec3 t2 = topCenter + glm::vec3(glm::cos(theta2) * radius, glm::sin(theta2) * radius, 0);
 
-             // 2 triangles áßá æÌå ÌÇäÈí
              vertices.push_back({ b1, {0,0} });
              vertices.push_back({ t1, {0,1} });
              vertices.push_back({ t2, {1,1} });
@@ -239,9 +236,7 @@ public:
         float h = baseSize / 2.0f;
         glm::vec3 top = center + glm::vec3(0.0f, 0.0f, height);
 
-        // ŞÇÚÏÉ ÇáåÑã (2 ãËáË áÊÛØíÉ ÇáãÑÈÚ)
         vector<Vertex> vertices = {
-            // ŞÇÚÏÉ
             {{center.x - h, center.y - h, center.z}, {0.0f, 0.0f}},
             {{center.x + h, center.y - h, center.z}, {1.0f, 0.0f}},
             {{center.x + h, center.y + h, center.z}, {1.0f, 1.0f}},
@@ -251,7 +246,6 @@ public:
             {{center.x - h, center.y + h, center.z}, {0.0f, 1.0f}}
         };
 
-        // ÇáÌæÇäÈ ÇáÃÑÈÚÉ (ãËáË áßá ÌÇäÈ)
         // Front
         vertices.push_back({ {center.x - h, center.y - h, center.z}, {0.0f, 0.0f} });
         vertices.push_back({ top, {0.5f, 1.0f} });

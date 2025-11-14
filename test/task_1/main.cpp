@@ -98,7 +98,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
         if (distanceToTarget > 20.0f) distanceToTarget = 20.0f;
     }
     else {
-        camera.ProcessMouseScroll((float)yoffset); // FPS zoom
+        camera.ProcessMouseScroll((float)yoffset); 
     }
 }
 
@@ -138,27 +138,20 @@ int main()
 
 
 
-    // ==== ≈‰‘«¡ Meshes ====
     CylinderMeshes myCylinder = ShapeGenerator::generateCylinder(glm::vec3(0.0f, 1.5f, 0.0f), 1.0f, 2.0f);
     ConeMeshes myCone = ShapeGenerator::generateCone(glm::vec3(0.0f, -1.0f, 0.0f), 1.0f, 2.0f);
     Mesh pyramid = ShapeGenerator::generatePyramid(
-        glm::vec3(-2.5f, -1.0f, 0.0f),   // center
-        2.0f,                          // base size
-        2.0f                           // height
+        glm::vec3(-2.5f, -1.0f, 0.0f),   
+        2.0f,                          
+        2.0f                          
     );
 
 
-    // center = „Êﬁ⁄ «·„Ê‘Ê— ›Ì «·⁄«·„
     glm::vec3 center = glm::vec3(-2.5f, 1.5f, 1.0f);
-    float radius = 1.0f;   // ‰’› ﬁÿ— «·ﬁ«⁄œ…
+    float radius = 1.0f;  
 
-    // „À«· „Ê‘Ê— —»«⁄Ì
     Mesh prism = ShapeGenerator::generatePrism(center, radius, 2.0f, 3);
 
-
-
-
-    
 
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
@@ -166,7 +159,7 @@ int main()
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // FPS mode cursor
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); 
 
     while (!glfwWindowShouldClose(window))
     {
@@ -208,7 +201,6 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
 
-        // —”„ «·«”ÿÊ«‰… Ê«·„Œ—Êÿ
         ShapeGenerator::drawCylinder(myCylinder);
         ShapeGenerator::drawCone(myCone);
         pyramid.Draw(GL_TRIANGLES);
