@@ -45,6 +45,29 @@ private:
     }
 };
 
+
+
+struct CylinderMeshes {
+    Mesh topCircle;
+    Mesh side;
+    Mesh bottomCircle;
+
+    CylinderMeshes(const Mesh& top, const Mesh& s, const Mesh& bottom)
+        : topCircle(top), side(s), bottomCircle(bottom) {
+    }
+};
+
+
+
+struct ConeMeshes {
+    Mesh bottomCircle;
+    Mesh side;
+
+    ConeMeshes(const Mesh& bottom, const Mesh& s)
+        : bottomCircle(bottom), side(s) {
+    }
+};
+
 // ================== ShapeGenerator ==================
 class ShapeGenerator {
 public:
@@ -95,6 +118,105 @@ public:
         return vertices;
     }
 
+
+
+     static CylinderMeshes generateCylinder(const glm::vec3& center, float radius, float height) {
+         return CylinderMeshes(
+             Mesh(generateCircleFan(center + glm::vec3(0, 0, height), radius, 100)),
+             Mesh(generateCylinderSide(center, radius, height, 100, false)),
+             Mesh(generateCircleFan(center, radius, 36))
+         );
+     }
+
+     static ConeMeshes generateCone(const glm::vec3& center, float radius, float height) {
+         return ConeMeshes(
+             Mesh(generateCircleFan(center, radius, 100)),
+             Mesh(generateCylinderSide(center, radius, height, 100, true))
+         );
+     }
+
+
+
+     static void drawCylinder(const CylinderMeshes& cyl) {
+         cyl.topCircle.Draw(GL_TRIANGLE_FAN);
+         cyl.side.Draw(GL_TRIANGLE_STRIP);
+         cyl.bottomCircle.Draw(GL_TRIANGLE_FAN);
+     }
+
+
+     static void drawCone(const ConeMeshes& cone) {
+         cone.bottomCircle.Draw(GL_TRIANGLE_FAN);
+         cone.side.Draw(GL_TRIANGLE_STRIP);
+     }
+
+
+
+     static Mesh generatePrism(glm::vec3 center, float radius, float height, int sides)
+     {
+         vector<Vertex> vertices;
+
+         float angleStep = glm::two_pi<float>() / sides;
+         float halfH = height * 0.5f;
+
+         glm::vec3 topCenter = center + glm::vec3(0, 0, halfH);
+         glm::vec3 bottomCenter = center + glm::vec3(0, 0, -halfH);
+
+         // ======= 1) Generate Top Face =======
+         for (int i = 0; i < sides; i++)
+         {
+             float theta1 = i * angleStep;
+             float theta2 = (i + 1) % sides * angleStep;
+
+             glm::vec3 p1 = topCenter + glm::vec3(glm::cos(theta1) * radius, glm::sin(theta1) * radius, 0);
+             glm::vec3 p2 = topCenter + glm::vec3(glm::cos(theta2) * radius, glm::sin(theta2) * radius, 0);
+
+             vertices.push_back({ topCenter, {0.5f, 0.5f} });
+             vertices.push_back({ p1, {glm::cos(theta1) * 0.5f + 0.5f, glm::sin(theta1) * 0.5f + 0.5f} });
+             vertices.push_back({ p2, {glm::cos(theta2) * 0.5f + 0.5f, glm::sin(theta2) * 0.5f + 0.5f} });
+         }
+
+         // ======= 2) Generate Bottom Face =======
+         for (int i = 0; i < sides; i++)
+         {
+             float theta1 = i * angleStep;
+             float theta2 = (i + 1) % sides * angleStep;
+
+             glm::vec3 p1 = bottomCenter + glm::vec3(glm::cos(theta1) * radius, glm::sin(theta1) * radius, 0);
+             glm::vec3 p2 = bottomCenter + glm::vec3(glm::cos(theta2) * radius, glm::sin(theta2) * radius, 0);
+
+             vertices.push_back({ bottomCenter, {0.5f, 0.5f} });
+             vertices.push_back({ p2, {glm::cos(theta2) * 0.5f + 0.5f, glm::sin(theta2) * 0.5f + 0.5f} });
+             vertices.push_back({ p1, {glm::cos(theta1) * 0.5f + 0.5f, glm::sin(theta1) * 0.5f + 0.5f} });
+         }
+
+         // ======= 3) Generate Side Faces =======
+         for (int i = 0; i < sides; i++)
+         {
+             float theta1 = i * angleStep;
+             float theta2 = (i + 1) % sides * angleStep;
+
+             glm::vec3 b1 = bottomCenter + glm::vec3(glm::cos(theta1) * radius, glm::sin(theta1) * radius, 0);
+             glm::vec3 b2 = bottomCenter + glm::vec3(glm::cos(theta2) * radius, glm::sin(theta2) * radius, 0);
+
+             glm::vec3 t1 = topCenter + glm::vec3(glm::cos(theta1) * radius, glm::sin(theta1) * radius, 0);
+             glm::vec3 t2 = topCenter + glm::vec3(glm::cos(theta2) * radius, glm::sin(theta2) * radius, 0);
+
+             // 2 triangles ·ﬂ· ÊÃÂ Ã«‰»Ì
+             vertices.push_back({ b1, {0,0} });
+             vertices.push_back({ t1, {0,1} });
+             vertices.push_back({ t2, {1,1} });
+
+             vertices.push_back({ b1, {0,0} });
+             vertices.push_back({ t2, {1,1} });
+             vertices.push_back({ b2, {1,0} });
+         }
+
+         return Mesh(vertices);
+     }
+
+
+
+
     // (Cube)
     static vector<Vertex> generateCube(const glm::vec3& center, float size) {
         float h = size / 2.0f;
@@ -116,17 +238,41 @@ public:
     static vector<Vertex> generatePyramid(const glm::vec3& center, float baseSize, float height) {
         float h = baseSize / 2.0f;
         glm::vec3 top = center + glm::vec3(0.0f, 0.0f, height);
-        return {
-            // Base
+
+        // ﬁ«⁄œ… «·Â—„ (2 „À·À · €ÿÌ… «·„—»⁄)
+        vector<Vertex> vertices = {
+            // ﬁ«⁄œ…
             {{center.x - h, center.y - h, center.z}, {0.0f, 0.0f}},
             {{center.x + h, center.y - h, center.z}, {1.0f, 0.0f}},
             {{center.x + h, center.y + h, center.z}, {1.0f, 1.0f}},
-            {{center.x - h, center.y + h, center.z}, {0.0f, 1.0f}},
-            // Sides
-            {{center.x - h, center.y - h, center.z}, {0.0f, 0.0f}}, {top, {0.5f, 1.0f}}, {{center.x + h, center.y - h, center.z}, {1.0f, 0.0f}},
-            {{center.x + h, center.y - h, center.z}, {0.0f, 0.0f}}, {top, {0.5f, 1.0f}}, {{center.x + h, center.y + h, center.z}, {1.0f, 0.0f}},
-            {{center.x + h, center.y + h, center.z}, {0.0f, 0.0f}}, {top, {0.5f, 1.0f}}, {{center.x - h, center.y + h, center.z}, {1.0f, 0.0f}},
-            {{center.x - h, center.y + h, center.z}, {0.0f, 0.0f}}, {top, {0.5f, 1.0f}}, {{center.x - h, center.y - h, center.z}, {1.0f, 0.0f}},
+
+            {{center.x - h, center.y - h, center.z}, {0.0f, 0.0f}},
+            {{center.x + h, center.y + h, center.z}, {1.0f, 1.0f}},
+            {{center.x - h, center.y + h, center.z}, {0.0f, 1.0f}}
         };
+
+        // «·ÃÊ«‰» «·√—»⁄… („À·À ·ﬂ· Ã«‰»)
+        // Front
+        vertices.push_back({ {center.x - h, center.y - h, center.z}, {0.0f, 0.0f} });
+        vertices.push_back({ top, {0.5f, 1.0f} });
+        vertices.push_back({ {center.x + h, center.y - h, center.z}, {1.0f, 0.0f} });
+
+        // Right
+        vertices.push_back({ {center.x + h, center.y - h, center.z}, {0.0f, 0.0f} });
+        vertices.push_back({ top, {0.5f, 1.0f} });
+        vertices.push_back({ {center.x + h, center.y + h, center.z}, {1.0f, 0.0f} });
+                       
+        // Back
+        vertices.push_back({ {center.x + h, center.y + h, center.z}, {0.0f, 0.0f} });
+        vertices.push_back({ top, {0.5f, 1.0f} });
+        vertices.push_back({ {center.x - h, center.y + h, center.z}, {1.0f, 0.0f} });
+
+        // Left
+        vertices.push_back({ {center.x - h, center.y + h, center.z}, {0.0f, 0.0f} });
+        vertices.push_back({ top, {0.5f, 1.0f} });
+        vertices.push_back({ {center.x - h, center.y - h, center.z}, {1.0f, 0.0f} });
+
+        return vertices;
     }
+
 };

@@ -136,20 +136,27 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     stbi_image_free(data);
 
-    // Circle √⁄·Ï
-    Mesh topCircle(ShapeGenerator::generateCircleFan(glm::vec3(0.0f, 1.5f, 0.0f), 1.0f, 100));
 
-    // Cylinder ›Êﬁ
-    Mesh topCylinder(ShapeGenerator::generateCylinderSide(glm::vec3(0.0f, 1.5f, 0.0f), 1.0f, 2.0f, 36, false));
 
-    // Circle √⁄·Ï „‰ Cylinder
-    Mesh topCircle2(ShapeGenerator::generateCircleFan(glm::vec3(0.0f, 1.5f, 2.0f), 1.0f, 100));
+    // ==== ≈‰‘«¡ Meshes ====
+    CylinderMeshes myCylinder = ShapeGenerator::generateCylinder(glm::vec3(0.0f, 1.5f, 0.0f), 1.0f, 2.0f);
+    ConeMeshes myCone = ShapeGenerator::generateCone(glm::vec3(0.0f, -1.0f, 0.0f), 1.0f, 2.0f);
+    Mesh pyramid = ShapeGenerator::generatePyramid(
+        glm::vec3(-2.5f, -1.0f, 0.0f),   // center
+        2.0f,                          // base size
+        2.0f                           // height
+    );
 
-    // Circle √”›·
-    Mesh bottomCircle(ShapeGenerator::generateCircleFan(glm::vec3(0.0f, -1.0f, 0.0f), 1.0f, 100));
 
-    // Cylinder √”›·
-    Mesh bottomCylinder(ShapeGenerator::generateCylinderSide(glm::vec3(0.0f, -1.0f, 0.0f), 1.0f, 2.0f, 36, true));
+    // center = „Êﬁ⁄ «·„Ê‘Ê— ›Ì «·⁄«·„
+    glm::vec3 center = glm::vec3(-2.5f, 1.5f, 1.0f);
+    float radius = 1.0f;   // ‰’› ﬁÿ— «·ﬁ«⁄œ…
+
+    // „À«· „Ê‘Ê— —»«⁄Ì
+    Mesh prism = ShapeGenerator::generatePrism(center, radius, 2.0f, 3);
+
+
+
 
     
 
@@ -182,7 +189,13 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader.use();
+  
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
 
+        shader.setInt("texture1", 0);
+
+ 
         glm::mat4 view = useOrbit ? camera.GetOrbitViewMatrix(orbitTarget, distanceToTarget, yawOrbit, pitchOrbit)
             : camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), 800.0f / 600.0f, 0.1f, 100.0f);
@@ -194,19 +207,12 @@ int main()
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f));
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-        // —‰œ— ﬂ· Mesh
-        topCircle.Draw(GL_TRIANGLE_FAN);       // Circle ›Êﬁ
-        topCylinder.Draw(GL_TRIANGLE_STRIP);     // Cylinder ›Êﬁ
-        topCircle2.Draw(GL_TRIANGLE_FAN);      // Circle √⁄·Ï „‰ Cylinder
-        bottomCircle.Draw(GL_TRIANGLE_FAN);    // Circle √”›·
-        bottomCylinder.Draw(GL_TRIANGLE_STRIP);  // Cylinder √”›·
 
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        shader.setInt("texture1", 0);
-
-        
+        // —”„ «·«”ÿÊ«‰… Ê«·„Œ—Êÿ
+        ShapeGenerator::drawCylinder(myCylinder);
+        ShapeGenerator::drawCone(myCone);
+        pyramid.Draw(GL_TRIANGLES);
+        prism.Draw(GL_TRIANGLES);
 
 
         
