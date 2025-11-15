@@ -8,7 +8,9 @@ using namespace std;
 struct Vertex {
     glm::vec3 pos;
     glm::vec2 texCoords;
+    glm::vec4 color = glm::vec4(1.0f); // «› —«÷Ì √»Ì÷
 };
+
 
 // ================== Mesh Class ==================
 class Mesh {
@@ -38,8 +40,13 @@ private:
 
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
+
 
         glBindVertexArray(0);
     }

@@ -102,6 +102,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     }
 }
 
+
 // ----------------- Main -----------------
 int main()
 {
@@ -159,7 +160,13 @@ int main()
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); 
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+
+
+    glBindVertexArray(0);
+
+
 
     while (!glfwWindowShouldClose(window))
     {
@@ -178,15 +185,29 @@ int main()
             firstMouseFPS = true;
         }
 
+
+
+
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        shader.use();
-  
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
 
-        shader.setInt("texture1", 0);
+
+
+        
+        shader.use();
+
+        // ‰›⁄¯· «” Œœ«„ «·‹ texture
+        shader.setBool("useTexture", true);       // Œ·Ì «·‘Ìœ— Ì” Œœ„ texture
+        shader.setBool("useVertexColor", false);  // ‰Œ·Ì ·Ê‰ vertices „« Ì√À—
+        // flatColor „„ﬂ‰   —ﬂÂ √Ê ÌﬂÊ‰ √Ì ﬁÌ„…° „« —«Õ Ì√À— ÿ«·„« useTexture=true
+
+        glActiveTexture(GL_TEXTURE0);             //  ›⁄Ì· ÊÕœ… «·‹ texture 0
+        glBindTexture(GL_TEXTURE_2D, texture);   // —»ÿ «·‹ texture «··Ì ⁄‰œﬂ
+        shader.setInt("tex", 0);                  // ÷»ÿ sampler ›Ì «·‘Ìœ— ⁄·Ï «·ÊÕœ… 0
+
+  
+        
 
  
         glm::mat4 view = useOrbit ? camera.GetOrbitViewMatrix(orbitTarget, distanceToTarget, yawOrbit, pitchOrbit)
@@ -206,7 +227,7 @@ int main()
         pyramid.Draw(GL_TRIANGLES);
         prism.Draw(GL_TRIANGLES);
 
-
+        
         
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -216,3 +237,10 @@ int main()
     glfwTerminate();
     return 0;
 }
+
+
+
+
+
+
+
