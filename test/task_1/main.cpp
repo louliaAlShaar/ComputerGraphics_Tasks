@@ -151,6 +151,14 @@ int main()
         pyramidColor                  // «··Ê‰
     );
 
+    // „—ﬂ“ «·÷Ê¡ ›Ì «·„‘Âœ
+    glm::vec3 lightPos(0.0f, 2.0f, 4.0f);
+
+    // „” ÿÌ· Ì„À· «·÷Ê¡
+    vector<Vertex> lightRectVerts = ShapeGenerator::generateRectangle(lightPos, 0.5f, 0.5f, true, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)); // √’›—
+    Mesh lightRect(lightRectVerts, true, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+
+
 
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
@@ -191,9 +199,34 @@ int main()
 
 
 
-
         
         shader.use();
+
+        shader.setVec3("lightPos", lightPos);
+        shader.setVec3("viewPos", camera.Position);
+        shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        shader.setFloat("ambientStrength", 0.3f);
+        shader.setFloat("specularStrength", 0.5f);
+        shader.setFloat("shininess", 32.0f);
+
+
+
+
+
+        glm::mat4 view = useOrbit ? camera.GetOrbitViewMatrix(orbitTarget, distanceToTarget, yawOrbit, pitchOrbit)
+            : camera.GetViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), 800.0f / 600.0f, 0.1f, 100.0f);
+
+        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f));
+        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+
+
 
         // ----------------- Draw Cylinder with Texture -----------------
         shader.setBool("useVertexColor", false);
@@ -212,21 +245,21 @@ int main()
 
         coloredPyramid.Draw(GL_TRIANGLES);
 
+
+        // ‰—”„ «·„” ÿÌ· √Ê·« („’œ— «·÷Ê¡) »·Ê‰ À«» 
+        shader.setBool("useVertexColor", true);
+        shader.setBool("useTexture", false);
+        shader.setVec4("objectColor", glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)); // √’›—
+
+       
+
+        lightRect.Draw(GL_TRIANGLE_FAN);
+
+
   
         
 
  
-        glm::mat4 view = useOrbit ? camera.GetOrbitViewMatrix(orbitTarget, distanceToTarget, yawOrbit, pitchOrbit)
-            : camera.GetViewMatrix();
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), 800.0f / 600.0f, 0.1f, 100.0f);
-
-        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f));
-        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
         /*
         ShapeGenerator::drawCylinder(myCylinder);
         ShapeGenerator::drawCone(myCone);
