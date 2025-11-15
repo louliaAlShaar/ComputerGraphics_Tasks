@@ -139,19 +139,17 @@ int main()
 
 
 
-    CylinderMeshes myCylinder = ShapeGenerator::generateCylinder(glm::vec3(0.0f, 1.5f, 0.0f), 1.0f, 2.0f);
-    ConeMeshes myCone = ShapeGenerator::generateCone(glm::vec3(0.0f, -1.0f, 0.0f), 1.0f, 2.0f);
-    Mesh pyramid = ShapeGenerator::generatePyramid(
-        glm::vec3(-2.5f, -1.0f, 0.0f),   
-        2.0f,                          
-        2.0f                          
+    // ----------------- Create Shapes -----------------
+    CylinderMeshes myCylinder = ShapeGenerator::generateCylinder(glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 2.0f);
+
+    glm::vec4 pyramidColor = glm::vec4(1.0f, 0.5f, 0.31f, 1.0f); // coral
+    Mesh coloredPyramid = ShapeGenerator::generatePyramid(
+        glm::vec3(3.0f, 0.0f, 0.0f),  // „—ﬂ“ «·Â—„
+        2.0f,                         // ÕÃ„ «·ﬁ«⁄œ…
+        2.0f,                         // «— ›«⁄ «·Â—„
+        true,                         // useColor
+        pyramidColor                  // «··Ê‰
     );
-
-
-    glm::vec3 center = glm::vec3(-2.5f, 1.5f, 1.0f);
-    float radius = 1.0f;  
-
-    Mesh prism = ShapeGenerator::generatePrism(center, radius, 2.0f, 3);
 
 
     float deltaTime = 0.0f;
@@ -197,14 +195,22 @@ int main()
         
         shader.use();
 
-        // ‰›⁄¯· «” Œœ«„ «·‹ texture
-        shader.setBool("useTexture", true);       // Œ·Ì «·‘Ìœ— Ì” Œœ„ texture
-        shader.setBool("useVertexColor", false);  // ‰Œ·Ì ·Ê‰ vertices „« Ì√À—
-        // flatColor „„ﬂ‰   —ﬂÂ √Ê ÌﬂÊ‰ √Ì ﬁÌ„…° „« —«Õ Ì√À— ÿ«·„« useTexture=true
+        // ----------------- Draw Cylinder with Texture -----------------
+        shader.setBool("useVertexColor", false);
+        shader.setBool("useTexture", true);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        shader.setInt("tex", 0);
 
-        glActiveTexture(GL_TEXTURE0);             //  ›⁄Ì· ÊÕœ… «·‹ texture 0
-        glBindTexture(GL_TEXTURE_2D, texture);   // —»ÿ «·‹ texture «··Ì ⁄‰œﬂ
-        shader.setInt("tex", 0);                  // ÷»ÿ sampler ›Ì «·‘Ìœ— ⁄·Ï «·ÊÕœ… 0
+        ShapeGenerator::drawCylinder(myCylinder);
+
+        // ----------------- Draw Pyramid with Color -----------------
+        shader.setBool("useTexture", false);
+        shader.setBool("useVertexColor", true);
+        shader.setVec4("objectColor", pyramidColor);
+
+
+        coloredPyramid.Draw(GL_TRIANGLES);
 
   
         
@@ -221,12 +227,12 @@ int main()
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f));
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-
+        /*
         ShapeGenerator::drawCylinder(myCylinder);
         ShapeGenerator::drawCone(myCone);
         pyramid.Draw(GL_TRIANGLES);
         prism.Draw(GL_TRIANGLES);
-
+        */
         
         
         glfwSwapBuffers(window);
