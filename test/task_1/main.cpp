@@ -1,3 +1,4 @@
+// main.cpp
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -13,13 +14,10 @@ using namespace std;
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
-
 // ----------------- Variables -----------------
-
 float lastX = 400.0f;
 float lastY = 300.0f;
 bool firstMouse = true;
-
 
 glm::vec3 orbitTarget(0.0f, 0.0f, 0.0f);
 float distanceToTarget = 5.0f;
@@ -98,10 +96,9 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
         if (distanceToTarget > 20.0f) distanceToTarget = 20.0f;
     }
     else {
-        camera.ProcessMouseScroll((float)yoffset); 
+        camera.ProcessMouseScroll((float)yoffset);
     }
 }
-
 
 // ----------------- Main -----------------
 int main()
@@ -111,7 +108,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Camera Orbit / FPS", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Hello", nullptr, nullptr);
     if (!window) { cout << "Failed to create window\n"; glfwTerminate(); return -1; }
     glfwMakeContextCurrent(window);
 
@@ -124,56 +121,74 @@ int main()
 
     int width, height, nrChannels;
     unsigned char* data = stbi_load("assets/paper.png", &width, &height, &nrChannels, 0);
-    if (!data) cout << "Failed to load texture!\n";
+    if (!data) {
+        cout << "Failed to load texture 'assets/paper.png'!\n";
+    }
 
-    unsigned int texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    unsigned int diffuseTexID = 0;
+    if (data) {
+        glGenTextures(1, &diffuseTexID);
+        glBindTexture(GL_TEXTURE_2D, diffuseTexID);
+        GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        stbi_image_free(data);
+    }
+
+    unsigned int specularTexID;
+    glGenTextures(1, &specularTexID);
+    glBindTexture(GL_TEXTURE_2D, specularTexID);
+    unsigned char whitePixel[3] = { 255, 255, 255 }; 
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, whitePixel);
     glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    stbi_image_free(data);
 
-
-
-    // ----------------- Create Shapes -----------------
+    // ---------- Create shapes ----------
     CylinderMeshes myCylinder = ShapeGenerator::generateCylinder(glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 2.0f);
 
     glm::vec4 pyramidColor = glm::vec4(1.0f, 0.5f, 0.31f, 1.0f); // coral
     Mesh coloredPyramid = ShapeGenerator::generatePyramid(
-        glm::vec3(3.0f, 0.0f, 0.0f),  // „—ﬂ“ «·Â—„
-        2.0f,                         // ÕÃ„ «·ﬁ«⁄œ…
-        2.0f,                         // «— ›«⁄ «·Â—„
-        true,                         // useColor
-        pyramidColor                  // «··Ê‰
+        glm::vec3(3.0f, 0.0f, 0.0f),
+        2.0f,
+        2.0f,
+        true,
+        pyramidColor
     );
 
-    // „—ﬂ“ «·÷Ê¡ ›Ì «·„‘Âœ
     glm::vec3 lightPos(0.0f, 2.0f, 4.0f);
 
-    // „” ÿÌ· Ì„À· «·÷Ê¡
     vector<Vertex> lightRectVerts = ShapeGenerator::generateRectangle(lightPos, 0.5f, 0.5f, true, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)); // √’›—
     Mesh lightRect(lightRectVerts, true, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
-
-
 
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
 
+    // ---------- Callbacks ----------
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 
+    shader.use();
+    shader.setInt("diffuseMap", 1);   
+    shader.setInt("specularMap", 2);  
 
-    glBindVertexArray(0);
+    if (diffuseTexID != 0) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, diffuseTexID);
+    }
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, specularTexID);
 
-
-
+    // ---------- Main loop ----------
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
@@ -191,29 +206,27 @@ int main()
             firstMouseFPS = true;
         }
 
-
-
-
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-
-        
         shader.use();
 
-        shader.setVec3("lightPos", lightPos);
+        shader.setVec3("lightPos", lightPos); 
         shader.setVec3("viewPos", camera.Position);
-        shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f)); 
 
-        shader.setFloat("ambientStrength", 0.3f);
-        shader.setFloat("specularStrength", 0.5f);
-        shader.setFloat("shininess", 32.0f);
+        shader.setFloat("ambientStrength", 0.3f);   
+        shader.setFloat("specularStrength", 0.5f);  
+        shader.setFloat("shininess", 32.0f);        
 
+        shader.setVec3("materialAmbient", glm::vec3(0.7f, 0.7f, 0.7f));
+        shader.setVec3("materialDiffuse", glm::vec3(0.7f, 0.7f, 0.7f));
+        shader.setVec3("materialSpecular", glm::vec3(1.0f, 1.0f, 1.0f));
 
+        shader.setVec3("dirLightDirection", glm::vec3(-0.2f, -1.0f, -0.3f));
+        shader.setVec3("dirLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
-
-
+        // ---- matrices ----
         glm::mat4 view = useOrbit ? camera.GetOrbitViewMatrix(orbitTarget, distanceToTarget, yawOrbit, pitchOrbit)
             : camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), 800.0f / 600.0f, 0.1f, 100.0f);
@@ -225,15 +238,15 @@ int main()
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f));
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-
-
-
         // ----------------- Draw Cylinder with Texture -----------------
+        
         shader.setBool("useVertexColor", false);
         shader.setBool("useTexture", true);
+
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        shader.setInt("tex", 0);
+        static unsigned int texUnit0 = 0;
+        glBindTexture(GL_TEXTURE_2D, diffuseTexID);
+        shader.setInt("tex", 0); 
 
         ShapeGenerator::drawCylinder(myCylinder);
 
@@ -241,45 +254,20 @@ int main()
         shader.setBool("useTexture", false);
         shader.setBool("useVertexColor", true);
         shader.setVec4("objectColor", pyramidColor);
-
-
         coloredPyramid.Draw(GL_TRIANGLES);
 
-
-        // ‰—”„ «·„” ÿÌ· √Ê·« („’œ— «·÷Ê¡) »·Ê‰ À«» 
+        // ----------------- Draw Light Rect (source visual) -----------------
         shader.setBool("useVertexColor", true);
         shader.setBool("useTexture", false);
-        shader.setVec4("objectColor", glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)); // √’›—
-
-       
-
+        shader.setVec4("objectColor", glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)); 
         lightRect.Draw(GL_TRIANGLE_FAN);
 
-
-  
-        
-
- 
-        /*
-        ShapeGenerator::drawCylinder(myCylinder);
-        ShapeGenerator::drawCone(myCone);
-        pyramid.Draw(GL_TRIANGLES);
-        prism.Draw(GL_TRIANGLES);
-        */
-        
-        
+        // ---- swap ----
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-
+    // clean up
     glfwTerminate();
     return 0;
 }
-
-
-
-
-
-
-
