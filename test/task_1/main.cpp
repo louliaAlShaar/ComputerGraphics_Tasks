@@ -1,4 +1,3 @@
-// main.cpp
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -125,6 +124,7 @@ int main()
         cout << "Failed to load texture 'assets/paper.png'!\n";
     }
 
+
     unsigned int diffuseTexID = 0;
     if (data) {
         glGenTextures(1, &diffuseTexID);
@@ -142,7 +142,7 @@ int main()
     unsigned int specularTexID;
     glGenTextures(1, &specularTexID);
     glBindTexture(GL_TEXTURE_2D, specularTexID);
-    unsigned char whitePixel[3] = { 255, 255, 255 }; 
+    unsigned char whitePixel[3] = { 255, 255, 255 };
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, whitePixel);
     glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -150,10 +150,9 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // ---------- Create shapes ----------
     CylinderMeshes myCylinder = ShapeGenerator::generateCylinder(glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, 2.0f);
 
-    glm::vec4 pyramidColor = glm::vec4(1.0f, 0.5f, 0.31f, 1.0f); // coral
+    glm::vec4 pyramidColor = glm::vec4(1.0f, 0.5f, 0.31f, 1.0f);
     Mesh coloredPyramid = ShapeGenerator::generatePyramid(
         glm::vec3(3.0f, 0.0f, 0.0f),
         2.0f,
@@ -164,7 +163,7 @@ int main()
 
     glm::vec3 lightPos(0.0f, 2.0f, 4.0f);
 
-    vector<Vertex> lightRectVerts = ShapeGenerator::generateRectangle(lightPos, 0.5f, 0.5f, true, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)); // รีÝั
+    vector<Vertex> lightRectVerts = ShapeGenerator::generateRectangle(lightPos, 0.5f, 0.5f, true, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)); 
     Mesh lightRect(lightRectVerts, true, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
 
     float deltaTime = 0.0f;
@@ -177,16 +176,18 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 
-    shader.use();
-    shader.setInt("diffuseMap", 1);   
-    shader.setInt("specularMap", 2);  
-
     if (diffuseTexID != 0) {
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE0); 
         glBindTexture(GL_TEXTURE_2D, diffuseTexID);
     }
-    glActiveTexture(GL_TEXTURE2);
+
+    glActiveTexture(GL_TEXTURE1); 
     glBindTexture(GL_TEXTURE_2D, specularTexID);
+
+
+
+    shader.use();
+    
 
     // ---------- Main loop ----------
     while (!glfwWindowShouldClose(window))
@@ -208,23 +209,59 @@ int main()
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        
         shader.use();
 
-        shader.setVec3("lightPos", lightPos); 
         shader.setVec3("viewPos", camera.Position);
-        shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f)); 
 
-        shader.setFloat("ambientStrength", 0.3f);   
-        shader.setFloat("specularStrength", 0.5f);  
-        shader.setFloat("shininess", 32.0f);        
+        shader.setVec3("lightPos", lightPos);
+        shader.setVec3("viewPos", camera.Position);
+        shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        shader.setFloat("ambientStrength", 1.3f);
+        shader.setFloat("specularStrength", 0.5f);
+        shader.setFloat("shininess", 32.0f);
 
         shader.setVec3("materialAmbient", glm::vec3(0.7f, 0.7f, 0.7f));
         shader.setVec3("materialDiffuse", glm::vec3(0.7f, 0.7f, 0.7f));
         shader.setVec3("materialSpecular", glm::vec3(1.0f, 1.0f, 1.0f));
 
-        shader.setVec3("dirLightDirection", glm::vec3(-0.2f, -1.0f, -0.3f));
-        shader.setVec3("dirLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        shader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+        shader.setVec3("dirLight.ambient", glm::vec3(0.1f));
+        shader.setVec3("dirLight.diffuse", glm::vec3(1.0f));
+        shader.setVec3("dirLight.specular", glm::vec3(1.0f));
+
+        shader.setInt("diffuseMap", 0);
+        shader.setInt("specularMap", 1);
+
+
+        // ============ Enable ONE Point Light ============
+        shader.setVec3("pointLights[0].position", lightPos);
+        shader.setVec3("pointLights[0].ambient", glm::vec3(0.1f));
+        shader.setVec3("pointLights[0].diffuse", glm::vec3(1.0f));
+        shader.setVec3("pointLights[0].specular", glm::vec3(1.0f));
+
+        shader.setFloat("pointLights[0].constant", 1.0f);
+        shader.setFloat("pointLights[0].linear", 0.09f);
+        shader.setFloat("pointLights[0].quadratic", 0.032f);
+        
+        // ============ Enable Spot Light ============
+
+        shader.setVec3("spotLight.position", camera.Position);
+        shader.setVec3("spotLight.direction", camera.Front);
+        shader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+        shader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+
+        shader.setFloat("spotLight.constant", 1.0f);
+        shader.setFloat("spotLight.linear", 0.09f);
+        shader.setFloat("spotLight.quadratic", 0.032f);
+
+        shader.setVec3("spotLight.ambient", glm::vec3(0.0f));
+        shader.setVec3("spotLight.diffuse", glm::vec3(1.0f));
+        shader.setVec3("spotLight.specular", glm::vec3(1.0f));
+
+
+
 
         // ---- matrices ----
         glm::mat4 view = useOrbit ? camera.GetOrbitViewMatrix(orbitTarget, distanceToTarget, yawOrbit, pitchOrbit)
@@ -239,15 +276,10 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
         // ----------------- Draw Cylinder with Texture -----------------
-        
         shader.setBool("useVertexColor", false);
         shader.setBool("useTexture", true);
-
         glActiveTexture(GL_TEXTURE0);
-        static unsigned int texUnit0 = 0;
         glBindTexture(GL_TEXTURE_2D, diffuseTexID);
-        shader.setInt("tex", 0); 
-
         ShapeGenerator::drawCylinder(myCylinder);
 
         // ----------------- Draw Pyramid with Color -----------------
@@ -256,18 +288,16 @@ int main()
         shader.setVec4("objectColor", pyramidColor);
         coloredPyramid.Draw(GL_TRIANGLES);
 
-        // ----------------- Draw Light Rect (source visual) -----------------
+        // ----------------- Draw Light Rect -----------------
         shader.setBool("useVertexColor", true);
         shader.setBool("useTexture", false);
-        shader.setVec4("objectColor", glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)); 
+        shader.setVec4("objectColor", glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
         lightRect.Draw(GL_TRIANGLE_FAN);
 
-        // ---- swap ----
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    // clean up
     glfwTerminate();
     return 0;
 }
