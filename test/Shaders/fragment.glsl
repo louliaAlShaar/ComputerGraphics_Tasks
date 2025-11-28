@@ -43,6 +43,7 @@ struct PointLight {
     vec3 diffuse;
     vec3 specular;
 };
+
 #define NR_POINT_LIGHTS 1
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 
@@ -94,7 +95,7 @@ void main()
         result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, baseColor, specularColor); 
 
     // SpotLight
-    result += CalcSpotLight(spotLight, norm, FragPos, viewDir, baseColor, specularColor);
+    //result += CalcSpotLight(spotLight, norm, FragPos, viewDir, baseColor, specularColor);
 
     FragColor = vec4(result, 1.0);
 }
